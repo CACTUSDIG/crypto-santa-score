@@ -85,8 +85,8 @@ export const calculateScore = (transactions: Transaction[]) => {
     if (naughtyTx) {
       return {
         score: 0,
-        explanation: "Ho ho ho! Straight to the naughty list for those NFTs! 😈",
-        points: ["🚫 Naughty NFT interaction detected"],
+        explanation: "Ho ho ho! Straight to the naughty list for those NFTs!",
+        points: ["🚫 Degen NFT interaction detected"],
         metrics: { totalTransactions: transactions.length }
       };
     }
@@ -116,48 +116,48 @@ export const calculateScore = (transactions: Transaction[]) => {
       parseInt(tx.timeStamp) > oneMonthAgo
     );
 
-    // Success Score (40 points)
-    scoreBreakdown.successScore = Math.floor((1 - failedRatio) * 40);
+    // Success Score (35 points) - slightly reduced
+    scoreBreakdown.successScore = Math.floor((1 - failedRatio) * 35);
     points.push(
-      failedRatio === 0 ? "🎯 Perfect success rate! (+40)" :
-      failedRatio < 0.1 ? "✅ High success rate (+30)" :
+      failedRatio === 0 ? "🎯 Perfect success rate! (+35)" :
+      failedRatio < 0.1 ? "✅ High success rate (+25)" :
       "❌ Room for improvement (+10)"
     );
 
-    // Gas Score (40 points)
-    if (avgGasUsed < 80000) {
-      scoreBreakdown.gasScore = 40;
-      points.push("🌟 Gas efficiency master! (+40)");
-    } else if (avgGasUsed < 150000) {
-      scoreBreakdown.gasScore = 30;
-      points.push("💰 Very efficient gas usage (+30)");
-    } else if (avgGasUsed < 300000) {
+    // Gas Score (45 points) - increased weight and stricter thresholds
+    if (avgGasUsed < 60000) {
+      scoreBreakdown.gasScore = 45;
+      points.push("🌟 Gas efficiency master! (+45)");
+    } else if (avgGasUsed < 100000) {
+      scoreBreakdown.gasScore = 35;
+      points.push("💰 Very efficient gas usage (+35)");
+    } else if (avgGasUsed < 200000) {
       scoreBreakdown.gasScore = 20;
       points.push("👍 Average gas usage (+20)");
     } else {
-      scoreBreakdown.gasScore = 10;
-      points.push("🔥 High gas consumption (+10)");
+      scoreBreakdown.gasScore = 0;  // Stricter penalty
+      points.push("🔥 High gas consumption (+0)");
     }
 
-    // Activity Score (20 points)
+    // Activity Score (10 points) - reduced weight
     if (transactions.length > 50 && recentTxs.length > 5) {
-      scoreBreakdown.activityScore = 20;
-      points.push("📈 Highly active trader (+20)");
+      scoreBreakdown.activityScore = 10;
+      points.push("📈 Highly active trader (+10)");
     } else if (transactions.length > 20) {
-      scoreBreakdown.activityScore = 15;
-      points.push("👌 Regular activity (+15)");
+      scoreBreakdown.activityScore = 7;
+      points.push("👌 Regular activity (+7)");
     } else {
-      scoreBreakdown.activityScore = 5;
-      points.push("🐌 Limited activity (+5)");
+      scoreBreakdown.activityScore = 3;
+      points.push("🐌 Limited activity (+3)");
     }
 
-    // Consistency Bonus (10 points)
+    // Consistency Bonus (5 points)
     if (recentTxs.length > 0) {
-      scoreBreakdown.consistencyBonus = 10;
-      points.push("⭐ Recent activity bonus! (+10)");
+      scoreBreakdown.consistencyBonus = 5;
+      points.push("⭐ Recent activity bonus! (+5)");
     }
 
-    // Value Efficiency (10 points)
+    // Value Efficiency (5 points)
     const highValueTxs = transactions.filter(tx => {
       try {
         return parseInt(tx.value) > 0;
@@ -167,18 +167,8 @@ export const calculateScore = (transactions: Transaction[]) => {
     }).length;
     
     if (highValueTxs / transactions.length > 0.7) {
-      scoreBreakdown.valueBonus = 10;
-      points.push("💎 Efficient value transfers (+10)");
-    }
-
-    // Complexity Bonus (10 points)
-    const complexTxs = transactions.filter(tx => 
-      tx.input && tx.input !== '0x'
-    ).length;
-    
-    if (complexTxs / transactions.length > 0.5) {
-      scoreBreakdown.complexityBonus = 10;
-      points.push("🧠 Advanced user bonus (+10)");
+      scoreBreakdown.valueBonus = 5;
+      points.push("💎 Efficient value transfers (+5)");
     }
 
     const totalScore = Math.min(100, Object.values(scoreBreakdown)
@@ -187,8 +177,8 @@ export const calculateScore = (transactions: Transaction[]) => {
     return {
       score: totalScore,
       explanation: totalScore >= 50
-        ? `Nice list with ${totalScore} points! 🎄`
-        : `Naughty list with ${totalScore} points! 😈`,
+        ? `Congratulations! You've made Santa's Nice list with ${totalScore} points! 🎄`
+        : `Oh dear... ${totalScore} points puts you on the naughty list! Try improving your gas usage and success rate! 😈`,
       points,
       metrics: {
         ...scoreBreakdown,
