@@ -67,8 +67,8 @@ const WalletChecker = () => {
       </div>
 
       <div className="container max-w-2xl py-8">
-        <Card className="p-6 bg-christmas-paper border-christmas-gold border-2">
-          <h1 className="text-4xl font-bold text-christmas-red text-center mb-8">
+        <Card className="p-6 bg-christmas-paper border-christmas-green border-2">
+          <h1 className="text-4xl font-['Berkshire_Swash'] text-christmas-red text-center mb-8">
             Crypto Naughty or Nice List
           </h1>
           
@@ -78,10 +78,10 @@ const WalletChecker = () => {
                 placeholder="Enter wallet address (0x...)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="flex-1"
+                className="flex-1 font-['Inter'] border-christmas-green/50"
               />
               <Select value={chain} onValueChange={(value: "ethereum" | "arbitrum") => setChain(value)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] font-['Inter'] border-christmas-green/50">
                   <SelectValue placeholder="Select chain" />
                 </SelectTrigger>
                 <SelectContent>
@@ -93,7 +93,7 @@ const WalletChecker = () => {
             <Button 
               onClick={checkWallet}
               disabled={loading}
-              className="w-full bg-christmas-green hover:bg-christmas-green/90 text-white"
+              className="w-full bg-christmas-green hover:bg-christmas-green/90 text-christmas-cream font-['Inter']"
             >
               {loading ? "Checking..." : "Check List"}
             </Button>
@@ -102,21 +102,28 @@ const WalletChecker = () => {
           {result && (
             <div className="text-center animate-fade-in">
               {result.inactive ? (
-                <p className="text-2xl text-gray-600">
+                <p className="text-2xl font-['Inter'] text-gray-600">
                   This wallet hasn't been active in the last 365 days!
                   <br />
                   Not on the list this year...
                 </p>
               ) : (
-                <div className="space-y-6">
-                  <h2 className="text-3xl font-bold">
+                <div className="space-y-6 p-6 border-2 border-christmas-green/30 rounded-lg bg-christmas-cream/50">
+                  <h2 className="text-3xl font-['Berkshire_Swash']">
                     {result.score > 0 ? (
                       <span className="text-christmas-green">Nice List! 🎄</span>
                     ) : (
                       <span className="text-christmas-red">Naughty List! 😈</span>
                     )}
                   </h2>
-                  <p className="text-lg text-gray-700">{result.explanation}</p>
+                  <div className="font-['Inter'] space-y-2 text-left">
+                    <p className="text-lg text-gray-700 mb-4">{result.explanation}</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                      {result.points?.map((point: string, index: number) => (
+                        <li key={index}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>

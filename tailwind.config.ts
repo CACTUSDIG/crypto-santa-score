@@ -25,9 +25,9 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         christmas: {
-          red: "#C41E3A",
-          green: "#165B33",
-          gold: "#FFD700",
+          red: "#B22222",
+          green: "#215E1C",
+          cream: "#FFF9E9",
           paper: "#F4EEE1",
         },
         primary: {
