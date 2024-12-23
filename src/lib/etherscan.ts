@@ -6,11 +6,6 @@ const ENDPOINTS = {
   arbitrum: "https://api.arbiscan.io/api"
 };
 
-const NAUGHTY_CONTRACTS = {
-  MILADY: "0x5Af0D9827E0c53E4799BB226655A1de152A425a5".toLowerCase(),
-  BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D".toLowerCase()
-};
-
 export interface Transaction {
   isError: string;
   gasUsed: string;
@@ -21,22 +16,35 @@ export interface Transaction {
   from: string;
 }
 
+const NAUGHTY_CONTRACTS = {
+  MILADY: "0x5Af0D9827E0c53E4799BB226655A1de152A425a5".toLowerCase(),
+  BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D".toLowerCase()
+};
+
 export const getTransactions = async (address: string, chain: 'ethereum' | 'arbitrum'): Promise<Transaction[]> => {
   const oneYearAgo = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60;
   const apiKey = chain === 'ethereum' ? ETHERSCAN_API_KEY : ARBISCAN_API_KEY;
   const baseUrl = ENDPOINTS[chain];
   
-  const response = await fetch(
-    `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`
-  );
+  // Get both regular and NFT transactions
+  const [txResponse, nftResponse] = await Promise.all([
+    fetch(`${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`),
+    fetch(`${baseUrl}?module=account&action=tokennfttx&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`)
+  ]);
 
-  const data = await response.json();
+  const [txData, nftData] = await Promise.all([
+    txResponse.json(),
+    nftResponse.json()
+  ]);
   
-  if (data.status === "0") {
-    throw new Error(data.message || "Failed to fetch transactions");
+  if (txData.status === "0" && txData.message !== "No transactions found") {
+    throw new Error(txData.message || "Failed to fetch transactions");
   }
 
-  return data.result.filter((tx: Transaction) => 
+  // Combine and filter transactions
+  const allTxs = [...(txData.result || []), ...(nftData.result || [])];
+  
+  return allTxs.filter((tx: Transaction) => 
     parseInt(tx.timeStamp) > oneYearAgo
   );
 };
