@@ -53,7 +53,6 @@ const WalletChecker = () => {
     <div className="relative min-h-screen">
       {/* Snowfall effect */}
       <div className="fixed inset-0 pointer-events-none">
-      <p>TEST TEST TEST 4444</p>
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
@@ -68,7 +67,7 @@ const WalletChecker = () => {
       </div>
 
       <div className="container max-w-2xl py-8">
-      <h1 className="text-6xl font-['Berkshire_Swash'] text-christmas-green text-center mb-4">
+      <h1 className="text-6xl font-['Berkshire_Swash'] text-christmas-red text-center mb-4">
           Santa's Blockchain List
         </h1>
         <p className="text-lg text-gray-700 text-center mb-8 font-['Inter']">
