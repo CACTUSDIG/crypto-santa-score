@@ -68,6 +68,12 @@ const WalletChecker = () => {
       </div>
 
       <div className="container max-w-2xl py-8">
+      <h1 className="text-6xl font-['Berkshire_Swash'] text-christmas-green text-center mb-4">
+          Santa's Blockchain List
+        </h1>
+        <p className="text-lg text-gray-700 text-center mb-8 font-['Inter']">
+          Have your crypto trades been naughty or nice this year? Enter your wallet address to find out if you're getting presents or coal!
+        </p>
         <Card className="p-6 bg-christmas-paper border-christmas-green border-2">
           <h1 className="text-4xl font-['Berkshire_Swash'] text-christmas-red text-center mb-8">
             Crypto Naughty or Nice List
