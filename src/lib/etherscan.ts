@@ -14,11 +14,12 @@ export interface Transaction {
   timeStamp: string;
   to: string;
   from: string;
+  contractAddress?: string;
 }
 
 const NAUGHTY_CONTRACTS = {
-  MILADY: "0x5Af0D9827E0c53E4799BB226655A1de152A425a5".toLowerCase(),
-  BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D".toLowerCase()
+  MILADY: "0x5af0d9827e0c53e4799bb226655a1de152a425a5".toLowerCase(),
+  BAYC: "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d".toLowerCase()
 };
 
 export const getTransactions = async (address: string, chain: 'ethereum' | 'arbitrum'): Promise<Transaction[]> => {
@@ -26,23 +27,29 @@ export const getTransactions = async (address: string, chain: 'ethereum' | 'arbi
   const apiKey = chain === 'ethereum' ? ETHERSCAN_API_KEY : ARBISCAN_API_KEY;
   const baseUrl = ENDPOINTS[chain];
   
-  // Get both regular and NFT transactions
-  const [txResponse, nftResponse] = await Promise.all([
+  // Get ALL possible transaction types
+  const [txResponse, nftResponse, erc20Response] = await Promise.all([
     fetch(`${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`),
-    fetch(`${baseUrl}?module=account&action=tokennfttx&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`)
+    fetch(`${baseUrl}?module=account&action=tokennfttx&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`),
+    fetch(`${baseUrl}?module=account&action=tokentx&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`)
   ]);
 
-  const [txData, nftData] = await Promise.all([
+  const [txData, nftData, erc20Data] = await Promise.all([
     txResponse.json(),
-    nftResponse.json()
+    nftResponse.json(),
+    erc20Response.json()
   ]);
-  
-  if (txData.status === "0" && txData.message !== "No transactions found") {
-    throw new Error(txData.message || "Failed to fetch transactions");
-  }
 
-  // Combine and filter transactions
-  const allTxs = [...(txData.result || []), ...(nftData.result || [])];
+  console.log("NFT Transactions:", nftData?.result);
+  console.log("Regular Transactions:", txData?.result);
+  console.log("ERC20 Transactions:", erc20Data?.result);
+
+  // Combine all transactions
+  const allTxs = [
+    ...(txData.result || []),
+    ...(nftData.result || []),
+    ...(erc20Data.result || [])
+  ];
   
   return allTxs.filter((tx: Transaction) => 
     parseInt(tx.timeStamp) > oneYearAgo
@@ -55,18 +62,27 @@ export const calculateScore = (transactions: Transaction[]) => {
   }
 
   // Debug logs
-  console.log("NAUGHTY_CONTRACTS:", NAUGHTY_CONTRACTS);
-  console.log("First few transactions:", transactions.slice(0, 3));
-  console.log("Sample transaction 'to' address:", transactions[0]?.to);
+  console.log("Checking transactions for naughty contracts:", NAUGHTY_CONTRACTS);
 
-  // Add logging to debug
+  // Check ALL possible contract interactions
   const naughtyTx = transactions.find(tx => {
-    console.log("Checking tx:", tx.to.toLowerCase());
-    return Object.values(NAUGHTY_CONTRACTS).includes(tx.to.toLowerCase())
+    const addressesToCheck = [
+      tx.to?.toLowerCase(),
+      tx.from?.toLowerCase(),
+      tx.contractAddress?.toLowerCase()
+    ].filter(Boolean);
+
+    const isNaughty = addressesToCheck.some(addr => 
+      Object.values(NAUGHTY_CONTRACTS).includes(addr)
+    );
+
+    console.log("Checking addresses:", addressesToCheck);
+    
+    return isNaughty;
   });
-  
+
   if (naughtyTx) {
-    console.log("Found naughty transaction:", naughtyTx);
+    console.log("FOUND NAUGHTY TRANSACTION:", naughtyTx);
     return {
       score: -100,
       explanation: "Ho ho ho! Looks like someone's been trading meme NFTs! Straight to the naughty list! 😈",
