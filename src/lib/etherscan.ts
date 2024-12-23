@@ -95,41 +95,52 @@ export const calculateScore = (transactions: Transaction[]) => {
     };
   }
 
-  let score = 0;
-  const totalGasUsed = transactions.reduce((sum, tx) => 
-    sum + (parseInt(tx.gasUsed) * parseInt(tx.gasPrice)), 0);
-  const avgGasUsed = totalGasUsed / transactions.length;
+  // Calculate metrics
   const failedTxs = transactions.filter(tx => tx.isError === "1").length;
   const failedRatio = failedTxs / transactions.length;
+  const avgGasUsed = transactions.reduce((sum, tx) => 
+    sum + (parseInt(tx.gasUsed) * parseInt(tx.gasPrice)), 0) / transactions.length;
 
-  // Base score calculations
-  score += Math.min(transactions.length / 10, 20); // Up to +20 for activity
-  score += failedRatio < 0.1 ? 15 : 0; // +15 for low failed tx ratio
-  score -= avgGasUsed > 1000000 ? 10 : 0; // -10 for high gas usage
-  score -= failedRatio > 0.2 ? 20 : 0; // -20 for high failed tx ratio
-  score -= transactions.length < 5 ? 10 : 0; // -10 for very low activity
+  // Generate analysis points
+  const points: string[] = [];
 
-  // Generate explanation
-  let explanation = "";
-  if (score > 0) {
-    explanation = `This wallet shows responsible behavior with ${transactions.length} transactions and only ${(failedRatio * 100).toFixed(1)}% failed transactions.`;
-    if (avgGasUsed <= 1000000) {
-      explanation += " They're also efficient with gas usage!";
-    }
-  } else {
-    explanation = `This wallet has some concerning patterns: ${(failedRatio * 100).toFixed(1)}% of transactions failed`;
-    if (avgGasUsed > 1000000) {
-      explanation += " and they're using a lot of gas";
-    }
-    if (transactions.length < 5) {
-      explanation += ", with very low activity";
-    }
-    explanation += ".";
+  // Transaction success analysis
+  if (failedRatio === 0) {
+    points.push("Perfect transaction success rate! 🎯");
+  } else if (failedRatio < 0.1) {
+    points.push("Consistently successful transactions ✅");
+  } else if (failedRatio > 0.2) {
+    points.push("High number of failed transactions ❌");
   }
+
+  // Gas usage analysis
+  if (avgGasUsed < 500000) {
+    points.push("Very efficient with gas usage 💰");
+  } else if (avgGasUsed > 1000000) {
+    points.push("High gas fees detected 🔥");
+  }
+
+  // Activity analysis
+  if (transactions.length > 50) {
+    points.push("Very active trader 📈");
+  } else if (transactions.length < 10) {
+    points.push("Limited trading activity 🐌");
+  }
+
+  // Calculate score (keep existing scoring logic)
+  let score = 0;
+  score += Math.min(transactions.length / 10, 20);
+  score += failedRatio < 0.1 ? 15 : 0;
+  score -= avgGasUsed > 1000000 ? 10 : 0;
+  score -= failedRatio > 0.2 ? 20 : 0;
+  score -= transactions.length < 5 ? 10 : 0;
 
   return {
     score,
-    explanation,
+    explanation: score > 0 
+      ? "You've made Santa's Nice list! Keep up the good work! 🎄" 
+      : "Oh dear... looks like someone's getting coal this year! 😈",
+    points, // Add the detailed points array
     metrics: {
       totalTransactions: transactions.length,
       failedTransactions: failedTxs,
