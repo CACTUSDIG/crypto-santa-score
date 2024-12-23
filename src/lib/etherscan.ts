@@ -1,5 +1,10 @@
 const ETHERSCAN_API_KEY = "IVV7ETIR2NRWJTXI5XEN8PKPIY6ZJ7617I";
-const BASE_URL = "https://api.etherscan.io/api";
+const ARBISCAN_API_KEY = "JR52K12QPA3I61A3PUJAYS8BVIM7TU5ZID";
+
+const ENDPOINTS = {
+  ethereum: "https://api.etherscan.io/api",
+  arbitrum: "https://api.arbiscan.io/api"
+};
 
 export interface Transaction {
   isError: string;
@@ -11,11 +16,13 @@ export interface Transaction {
   from: string;
 }
 
-export const getTransactions = async (address: string): Promise<Transaction[]> => {
+export const getTransactions = async (address: string, chain: 'ethereum' | 'arbitrum'): Promise<Transaction[]> => {
   const oneYearAgo = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60;
+  const apiKey = chain === 'ethereum' ? ETHERSCAN_API_KEY : ARBISCAN_API_KEY;
+  const baseUrl = ENDPOINTS[chain];
   
   const response = await fetch(
-    `${BASE_URL}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${ETHERSCAN_API_KEY}`
+    `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=1000&sort=desc&apikey=${apiKey}`
   );
 
   const data = await response.json();
@@ -41,21 +48,38 @@ export const calculateScore = (transactions: Transaction[]) => {
   const failedTxs = transactions.filter(tx => tx.isError === "1").length;
   const failedRatio = failedTxs / transactions.length;
 
-  // Nice metrics
+  // Base score calculations
   score += Math.min(transactions.length / 10, 20); // Up to +20 for activity
   score += failedRatio < 0.1 ? 15 : 0; // +15 for low failed tx ratio
   score -= avgGasUsed > 1000000 ? 10 : 0; // -10 for high gas usage
-
-  // Naughty metrics
   score -= failedRatio > 0.2 ? 20 : 0; // -20 for high failed tx ratio
   score -= transactions.length < 5 ? 10 : 0; // -10 for very low activity
 
+  // Generate explanation
+  let explanation = "";
+  if (score > 0) {
+    explanation = `This wallet shows responsible behavior with ${transactions.length} transactions and only ${(failedRatio * 100).toFixed(1)}% failed transactions.`;
+    if (avgGasUsed <= 1000000) {
+      explanation += " They're also efficient with gas usage!";
+    }
+  } else {
+    explanation = `This wallet has some concerning patterns: ${(failedRatio * 100).toFixed(1)}% of transactions failed`;
+    if (avgGasUsed > 1000000) {
+      explanation += " and they're using a lot of gas";
+    }
+    if (transactions.length < 5) {
+      explanation += ", with very low activity";
+    }
+    explanation += ".";
+  }
+
   return {
     score,
+    explanation,
     metrics: {
       totalTransactions: transactions.length,
       failedTransactions: failedTxs,
-      failedRatio: failedRatio.toFixed(2),
+      failedRatio: (failedRatio * 100).toFixed(1),
       avgGasUsed: Math.floor(avgGasUsed),
     }
   };

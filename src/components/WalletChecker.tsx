@@ -4,9 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const WalletChecker = () => {
   const [address, setAddress] = useState("");
+  const [chain, setChain] = useState<"ethereum" | "arbitrum">("ethereum");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const { toast } = useToast();
@@ -15,7 +23,7 @@ const WalletChecker = () => {
     if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
       toast({
         title: "Invalid Address",
-        description: "Please enter a valid Ethereum address",
+        description: "Please enter a valid address",
         variant: "destructive",
       });
       return;
@@ -23,7 +31,7 @@ const WalletChecker = () => {
 
     setLoading(true);
     try {
-      const transactions = await getTransactions(address);
+      const transactions = await getTransactions(address, chain);
       if (transactions.length === 0) {
         setResult({ inactive: true });
       } else {
@@ -64,17 +72,28 @@ const WalletChecker = () => {
             Crypto Naughty or Nice List
           </h1>
           
-          <div className="flex gap-4 mb-8">
-            <Input
-              placeholder="Enter wallet address (0x...)"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="flex-1"
-            />
+          <div className="space-y-4 mb-8">
+            <div className="flex gap-4">
+              <Input
+                placeholder="Enter wallet address (0x...)"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="flex-1"
+              />
+              <Select value={chain} onValueChange={(value: "ethereum" | "arbitrum") => setChain(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select chain" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ethereum">Ethereum</SelectItem>
+                  <SelectItem value="arbitrum">Arbitrum</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button 
               onClick={checkWallet}
               disabled={loading}
-              className="bg-christmas-green hover:bg-christmas-green/90 text-white"
+              className="w-full bg-christmas-green hover:bg-christmas-green/90 text-white"
             >
               {loading ? "Checking..." : "Check List"}
             </Button>
@@ -89,20 +108,15 @@ const WalletChecker = () => {
                   Not on the list this year...
                 </p>
               ) : (
-                <div>
-                  <h2 className="text-3xl font-bold mb-4">
+                <div className="space-y-6">
+                  <h2 className="text-3xl font-bold">
                     {result.score > 0 ? (
                       <span className="text-christmas-green">Nice List! 🎄</span>
                     ) : (
                       <span className="text-christmas-red">Naughty List! 😈</span>
                     )}
                   </h2>
-                  <div className="space-y-2 text-left">
-                    <p>Total Transactions: {result.metrics.totalTransactions}</p>
-                    <p>Failed Transactions: {result.metrics.failedTransactions}</p>
-                    <p>Failure Rate: {result.metrics.failedRatio}%</p>
-                    <p>Average Gas Used: {result.metrics.avgGasUsed}</p>
-                  </div>
+                  <p className="text-lg text-gray-700">{result.explanation}</p>
                 </div>
               )}
             </div>
