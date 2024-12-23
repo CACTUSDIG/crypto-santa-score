@@ -46,10 +46,16 @@ export const calculateScore = (transactions: Transaction[]) => {
     return null;
   }
 
+  // Debug logs
+  console.log("NAUGHTY_CONTRACTS:", NAUGHTY_CONTRACTS);
+  console.log("First few transactions:", transactions.slice(0, 3));
+  console.log("Sample transaction 'to' address:", transactions[0]?.to);
+
   // Add logging to debug
-  const naughtyTx = transactions.find(tx => 
-    Object.values(NAUGHTY_CONTRACTS).includes(tx.to.toLowerCase())
-  );
+  const naughtyTx = transactions.find(tx => {
+    console.log("Checking tx:", tx.to.toLowerCase());
+    return Object.values(NAUGHTY_CONTRACTS).includes(tx.to.toLowerCase())
+  });
   
   if (naughtyTx) {
     console.log("Found naughty transaction:", naughtyTx);
