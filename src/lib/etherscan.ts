@@ -85,7 +85,7 @@ export const calculateScore = (transactions: Transaction[]) => {
     if (naughtyTx) {
       return {
         score: 0,
-        explanation: "Ho ho ho! Straight to the naughty list for those NFTs!",
+        explanation: "🎅 Ho ho ho! Straight to the naughty list for those NFTs!",
         points: ["🚫 Degen NFT interaction detected"],
         metrics: { totalTransactions: transactions.length }
       };
@@ -177,8 +177,8 @@ export const calculateScore = (transactions: Transaction[]) => {
     return {
       score: totalScore,
       explanation: totalScore >= 50
-        ? `You've made Santa's Nice list with ${totalScore} points! 🎄`
-        : `Oh dear... ${totalScore} points puts you on the naughty list! Try improving your gas usage and success rate! 😈`,
+        ? `🎅 You've made Santa's Nice list with ${totalScore} points! 🎄`
+        : `🎅 ${totalScore} points you are on the naughty list! Try improving your gas usage and success rate!`,
       points,
       metrics: {
         ...scoreBreakdown,
