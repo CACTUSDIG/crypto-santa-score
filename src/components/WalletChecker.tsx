@@ -53,6 +53,7 @@ const WalletChecker = () => {
     <div className="relative min-h-screen">
       {/* Snowfall effect */}
       <div className="fixed inset-0 pointer-events-none">
+      <p>TEST TEST TEST 4444</p>
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
@@ -67,7 +68,6 @@ const WalletChecker = () => {
       </div>
 
       <div className="container max-w-2xl py-8">
-        <p>TEST TEST TEST</p>
         <Card className="p-6 bg-christmas-paper border-christmas-green border-2">
           <h1 className="text-4xl font-['Berkshire_Swash'] text-christmas-red text-center mb-8">
             Crypto Naughty or Nice List
