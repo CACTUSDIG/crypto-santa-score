@@ -79,22 +79,39 @@ const WalletChecker = () => {
           </h1>
           
           <div className="space-y-4 mb-8">
-            <div className="flex gap-4">
-              <Input
-                placeholder="Enter wallet address (0x...)"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="flex-1 font-['Inter'] border-christmas-green/50"
-              />
-              <Select value={chain} onValueChange={(value: "ethereum" | "arbitrum") => setChain(value)}>
-                <SelectTrigger className="w-[180px] font-['Inter'] border-christmas-green/50">
-                  <SelectValue placeholder="Select chain" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ethereum">Ethereum</SelectItem>
-                  <SelectItem value="arbitrum">Arbitrum</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+              <label htmlFor="wallet-address" className="block text-sm font-medium text-christmas-green">
+                Input Wallet Address
+              </label>
+              <div className="flex gap-4">
+                <Input
+                  id="wallet-address"
+                  placeholder="Enter wallet address (0x...)"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="flex-1 font-['Inter'] border-christmas-green/50"
+                />
+                <div className="space-y-2">
+                  <label htmlFor="chain-select" className="block text-sm font-medium text-christmas-green">
+                    Choose Chain
+                  </label>
+                  <Select 
+                    value={chain} 
+                    onValueChange={(value: "ethereum" | "arbitrum") => setChain(value)}
+                  >
+                    <SelectTrigger 
+                      id="chain-select"
+                      className="w-[180px] font-['Inter'] border-christmas-green/50"
+                    >
+                      <SelectValue placeholder="Select chain" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ethereum">Ethereum</SelectItem>
+                      <SelectItem value="arbitrum">Arbitrum</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
             <Button 
               onClick={checkWallet}
