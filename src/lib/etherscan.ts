@@ -7,8 +7,8 @@ const ENDPOINTS = {
 };
 
 const NAUGHTY_CONTRACTS = {
-  MILADY: "0x5Af0D9827E0c53E4799BB226655A1de152A425a5",
-  BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D"
+  MILADY: "0x5Af0D9827E0c53E4799BB226655A1de152A425a5".toLowerCase(),
+  BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D".toLowerCase()
 };
 
 export interface Transaction {
@@ -46,17 +46,21 @@ export const calculateScore = (transactions: Transaction[]) => {
     return null;
   }
 
-  const hasNaughtyNFTs = transactions.some(tx => 
-    Object.values(NAUGHTY_CONTRACTS).includes(tx.to)
+  // Add logging to debug
+  const naughtyTx = transactions.find(tx => 
+    Object.values(NAUGHTY_CONTRACTS).includes(tx.to.toLowerCase())
   );
-
-  if (hasNaughtyNFTs) {
+  
+  if (naughtyTx) {
+    console.log("Found naughty transaction:", naughtyTx);
     return {
       score: -100,
-      explanation: "Ho ho ho! Looks like someone's been trading degen NFTs! Straight to the naughty list! 😈",
+      explanation: "Ho ho ho! Looks like someone's been trading meme NFTs! Straight to the naughty list! 😈",
       metrics: {
         totalTransactions: transactions.length,
-        naughtyReason: "NFT trader detected"
+        failedTransactions: 0,
+        failedRatio: "0",
+        avgGasUsed: 0
       }
     };
   }
