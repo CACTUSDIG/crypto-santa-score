@@ -15,6 +15,7 @@ export interface Transaction {
   to: string;
   from: string;
   contractAddress?: string;
+  input?: string;
 }
 
 const NAUGHTY_CONTRACTS = {
@@ -56,96 +57,156 @@ export const getTransactions = async (address: string, chain: 'ethereum' | 'arbi
   );
 };
 
+interface ScoreBreakdown {
+  successScore: number;
+  gasScore: number;
+  activityScore: number;
+  consistencyBonus: number;
+  valueBonus: number;
+  complexityBonus: number;
+}
+
 export const calculateScore = (transactions: Transaction[]) => {
-  if (transactions.length === 0) {
-    return null;
-  }
+  try {
+    if (!transactions || transactions.length === 0) return null;
 
-  // Debug logs
-  console.log("Checking transactions for naughty contracts:", NAUGHTY_CONTRACTS);
+    // Naughty check first
+    const naughtyTx = transactions.find(tx => {
+      const addressesToCheck = [
+        tx.to?.toLowerCase(),
+        tx.from?.toLowerCase(),
+        tx.contractAddress?.toLowerCase()
+      ].filter(Boolean);
+      return addressesToCheck.some(addr => 
+        Object.values(NAUGHTY_CONTRACTS).includes(addr)
+      );
+    });
 
-  // Check ALL possible contract interactions
-  const naughtyTx = transactions.find(tx => {
-    const addressesToCheck = [
-      tx.to?.toLowerCase(),
-      tx.from?.toLowerCase(),
-      tx.contractAddress?.toLowerCase()
-    ].filter(Boolean);
+    if (naughtyTx) {
+      return {
+        score: 0,
+        explanation: "Ho ho ho! Straight to the naughty list for those NFTs! 😈",
+        points: ["🚫 Naughty NFT interaction detected"],
+        metrics: { totalTransactions: transactions.length }
+      };
+    }
 
-    const isNaughty = addressesToCheck.some(addr => 
-      Object.values(NAUGHTY_CONTRACTS).includes(addr)
+    const points: string[] = [];
+    const scoreBreakdown: ScoreBreakdown = {
+      successScore: 0,
+      gasScore: 0,
+      activityScore: 0,
+      consistencyBonus: 0,
+      valueBonus: 0,
+      complexityBonus: 0
+    };
+
+    // Safe calculations with fallbacks
+    const failedTxs = transactions.filter(tx => tx.isError === "1").length || 0;
+    const failedRatio = transactions.length ? failedTxs / transactions.length : 0;
+    const avgGasUsed = transactions.length ? 
+      transactions.reduce((sum, tx) => {
+        const gas = parseInt(tx.gasUsed) || 0;
+        return sum + gas;
+      }, 0) / transactions.length : 0;
+
+    // Time-based metrics
+    const oneMonthAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
+    const recentTxs = transactions.filter(tx => 
+      parseInt(tx.timeStamp) > oneMonthAgo
     );
 
-    console.log("Checking addresses:", addressesToCheck);
-    
-    return isNaughty;
-  });
+    // Success Score (40 points)
+    scoreBreakdown.successScore = Math.floor((1 - failedRatio) * 40);
+    points.push(
+      failedRatio === 0 ? "🎯 Perfect success rate! (+40)" :
+      failedRatio < 0.1 ? "✅ High success rate (+30)" :
+      "❌ Room for improvement (+10)"
+    );
 
-  if (naughtyTx) {
-    console.log("FOUND NAUGHTY TRANSACTION:", naughtyTx);
+    // Gas Score (40 points)
+    if (avgGasUsed < 80000) {
+      scoreBreakdown.gasScore = 40;
+      points.push("🌟 Gas efficiency master! (+40)");
+    } else if (avgGasUsed < 150000) {
+      scoreBreakdown.gasScore = 30;
+      points.push("💰 Very efficient gas usage (+30)");
+    } else if (avgGasUsed < 300000) {
+      scoreBreakdown.gasScore = 20;
+      points.push("👍 Average gas usage (+20)");
+    } else {
+      scoreBreakdown.gasScore = 10;
+      points.push("🔥 High gas consumption (+10)");
+    }
+
+    // Activity Score (20 points)
+    if (transactions.length > 50 && recentTxs.length > 5) {
+      scoreBreakdown.activityScore = 20;
+      points.push("📈 Highly active trader (+20)");
+    } else if (transactions.length > 20) {
+      scoreBreakdown.activityScore = 15;
+      points.push("👌 Regular activity (+15)");
+    } else {
+      scoreBreakdown.activityScore = 5;
+      points.push("🐌 Limited activity (+5)");
+    }
+
+    // Consistency Bonus (10 points)
+    if (recentTxs.length > 0) {
+      scoreBreakdown.consistencyBonus = 10;
+      points.push("⭐ Recent activity bonus! (+10)");
+    }
+
+    // Value Efficiency (10 points)
+    const highValueTxs = transactions.filter(tx => {
+      try {
+        return parseInt(tx.value) > 0;
+      } catch {
+        return false;
+      }
+    }).length;
+    
+    if (highValueTxs / transactions.length > 0.7) {
+      scoreBreakdown.valueBonus = 10;
+      points.push("💎 Efficient value transfers (+10)");
+    }
+
+    // Complexity Bonus (10 points)
+    const complexTxs = transactions.filter(tx => 
+      tx.input && tx.input !== '0x'
+    ).length;
+    
+    if (complexTxs / transactions.length > 0.5) {
+      scoreBreakdown.complexityBonus = 10;
+      points.push("🧠 Advanced user bonus (+10)");
+    }
+
+    const totalScore = Math.min(100, Object.values(scoreBreakdown)
+      .reduce((sum, score) => sum + score, 0));
+
     return {
-      score: -100,
-      explanation: "Ho ho ho! Looks like someone's been trading meme NFTs! Straight to the naughty list! 😈",
+      score: totalScore,
+      explanation: totalScore >= 50
+        ? `Nice list with ${totalScore} points! 🎄`
+        : `Naughty list with ${totalScore} points! 😈`,
+      points,
       metrics: {
+        ...scoreBreakdown,
+        totalScore,
         totalTransactions: transactions.length,
-        failedTransactions: 0,
-        failedRatio: "0",
-        avgGasUsed: 0
+        recentTransactions: recentTxs.length,
+        failedTransactions: failedTxs,
+        failedRatio: (failedRatio * 100).toFixed(1),
+        avgGasUsed: Math.floor(avgGasUsed)
       }
     };
+  } catch (error) {
+    console.error("Score calculation error:", error);
+    return {
+      score: 0,
+      explanation: "Oops! Something went wrong checking this wallet 😅",
+      points: ["Error calculating score"],
+      metrics: { error: true }
+    };
   }
-
-  // Calculate metrics
-  const failedTxs = transactions.filter(tx => tx.isError === "1").length;
-  const failedRatio = failedTxs / transactions.length;
-  const avgGasUsed = transactions.reduce((sum, tx) => 
-    sum + (parseInt(tx.gasUsed) * parseInt(tx.gasPrice)), 0) / transactions.length;
-
-  // Generate analysis points
-  const points: string[] = [];
-
-  // Transaction success analysis
-  if (failedRatio === 0) {
-    points.push("Perfect transaction success rate! 🎯");
-  } else if (failedRatio < 0.1) {
-    points.push("Consistently successful transactions ✅");
-  } else if (failedRatio > 0.2) {
-    points.push("High number of failed transactions ❌");
-  }
-
-  // Gas usage analysis
-  if (avgGasUsed < 500000) {
-    points.push("Very efficient with gas usage 💰");
-  } else if (avgGasUsed > 1000000) {
-    points.push("High gas fees detected 🔥");
-  }
-
-  // Activity analysis
-  if (transactions.length > 50) {
-    points.push("Very active trader 📈");
-  } else if (transactions.length < 10) {
-    points.push("Limited trading activity 🐌");
-  }
-
-  // Calculate score (keep existing scoring logic)
-  let score = 0;
-  score += Math.min(transactions.length / 10, 20);
-  score += failedRatio < 0.1 ? 15 : 0;
-  score -= avgGasUsed > 1000000 ? 10 : 0;
-  score -= failedRatio > 0.2 ? 20 : 0;
-  score -= transactions.length < 5 ? 10 : 0;
-
-  return {
-    score,
-    explanation: score > 0 
-      ? "You've made Santa's Nice list! Keep up the good work! 🎄" 
-      : "Oh dear... looks like someone's getting coal this year! 😈",
-    points, // Add the detailed points array
-    metrics: {
-      totalTransactions: transactions.length,
-      failedTransactions: failedTxs,
-      failedRatio: (failedRatio * 100).toFixed(1),
-      avgGasUsed: Math.floor(avgGasUsed),
-    }
-  };
 };
