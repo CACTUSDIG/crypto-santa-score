@@ -74,7 +74,7 @@ const WalletChecker = () => {
           Have your crypto trades been naughty or nice this year? Enter your wallet address to find out if you're getting presents or coal!
         </p>
         <Card className="p-6 bg-christmas-paper border-christmas-green border-2">
-          <h1 className="text-4xl font-['Berkshire_Swash'] text-christmas-red text-center mb-8">
+          <h1 className="text-3xl font-['Berkshire_Swash'] text-christmas-red text-center mb-8">
             Are you on the Naughty or Nice List?
           </h1>
           
