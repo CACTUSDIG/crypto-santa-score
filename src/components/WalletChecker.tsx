@@ -66,7 +66,7 @@ const WalletChecker = () => {
         ))}
       </div>
 
-      <div className="container max-w-2xl py-16">
+      <div className="container max-w-2xl pt-24 pb-8">
       <h1 className="text-6xl font-['Berkshire_Swash'] text-christmas-red text-center mb-4">
           Santa's Blockchain List
         </h1>
