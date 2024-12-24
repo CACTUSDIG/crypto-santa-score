@@ -134,9 +134,9 @@ const WalletChecker = () => {
                 <div className="space-y-6 p-6 border-2 border-christmas-green/30 rounded-lg bg-christmas-cream/50">
                   <h2 className="text-3xl font-['Berkshire_Swash']">
                   {result.score >= 50 ? (
-                      <span className="text-christmas-green">Nice List! 🎄</span>
+                      <span className="text-christmas-green">You're on the Nice List! 🎄</span>
                     ) : (
-                      <span className="text-christmas-red">Naughty List! 😈</span>
+                      <span className="text-christmas-red">You're on the Naughty List! </span>
                     )}
                   </h2>
                   <div className="font-['Inter'] space-y-2 text-left">

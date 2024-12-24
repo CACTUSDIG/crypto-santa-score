@@ -178,7 +178,7 @@ export const calculateScore = (transactions: Transaction[]) => {
       score: totalScore,
       explanation: totalScore >= 50
         ? `🎅 You've made Santa's Nice list with ${totalScore} points! 🎄`
-        : `🎅 ${totalScore} points you are on the naughty list! Try improving your gas usage and success rate!`,
+        : `🎅 ${totalScore} points get you on the naughty list! Try improving your gas usage and success rate!`,
       points,
       metrics: {
         ...scoreBreakdown,
