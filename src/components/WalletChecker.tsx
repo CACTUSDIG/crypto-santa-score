@@ -75,7 +75,7 @@ const WalletChecker = () => {
         </p>
         <Card className="p-6 bg-christmas-paper border-christmas-green border-2">
           <h1 className="text-4xl font-['Berkshire_Swash'] text-christmas-red text-center mb-8">
-            Crypto Naughty or Nice List
+            Are you on the Naughty or Nice List?
           </h1>
           
           <div className="space-y-4 mb-8">
